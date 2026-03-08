@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Package, CheckCircle2, AlertCircle, Minus, Plus, X } from "lucide-react";
+import { ShoppingCart, Package, CheckCircle2, AlertCircle, Minus, Plus, X, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import productWhey from "@/assets/product-whey.jpg";
 import productPreworkout from "@/assets/product-preworkout.jpg";
