@@ -50,6 +50,8 @@ const defaultProducts: Product[] = [
 
 const Shop = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const globalCart = useCart();
   const [products, setProducts] = useState<Product[]>(() => {
     const saved = localStorage.getItem(INVENTORY_KEY);
     return saved ? JSON.parse(saved) : defaultProducts;
