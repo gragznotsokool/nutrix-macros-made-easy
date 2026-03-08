@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Package, CheckCircle2, AlertCircle, Minus, Plus, X, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useCart } from "@/contexts/CartContext";
 import productWhey from "@/assets/product-whey.jpg";
 import productPreworkout from "@/assets/product-preworkout.jpg";
 import productBcaa from "@/assets/product-bcaa.jpg";
