@@ -83,6 +83,8 @@ const Shop = () => {
       }
       return [...prev, { product, qty: 1 }];
     });
+    // Sync to global cart
+    globalCart.addItem({ id: product.id, name: product.name, price: product.price, image: product.image, stock: product.stock });
     setCartOpen(true);
   };
 
