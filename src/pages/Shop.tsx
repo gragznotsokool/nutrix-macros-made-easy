@@ -249,7 +249,7 @@ const Shop = () => {
                     <span className="text-muted-foreground">Total</span>
                     <span className="font-display text-2xl text-primary">₹{cartTotal}</span>
                   </div>
-                  <Button onClick={placeOrder} className="w-full font-display text-lg tracking-wide">PLACE ORDER</Button>
+                  <Button onClick={goToCheckout} className="w-full font-display text-lg tracking-wide">PROCEED TO CHECKOUT</Button>
                 </div>
               )}
             </motion.div>
