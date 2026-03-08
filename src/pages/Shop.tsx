@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -7,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Package, CheckCircle2, AlertCircle, Minus, Plus, X, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useCart } from "@/contexts/CartContext";
 import productWhey from "@/assets/product-whey.jpg";
 import productPreworkout from "@/assets/product-preworkout.jpg";
 import productBcaa from "@/assets/product-bcaa.jpg";
@@ -48,6 +50,8 @@ const defaultProducts: Product[] = [
 
 const Shop = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const globalCart = useCart();
   const [products, setProducts] = useState<Product[]>(() => {
     const saved = localStorage.getItem(INVENTORY_KEY);
     return saved ? JSON.parse(saved) : defaultProducts;
@@ -79,6 +83,8 @@ const Shop = () => {
       }
       return [...prev, { product, qty: 1 }];
     });
+    // Sync to global cart
+    globalCart.addItem({ id: product.id, name: product.name, price: product.price, image: product.image, stock: product.stock });
     setCartOpen(true);
   };
 
@@ -95,36 +101,23 @@ const Shop = () => {
 
   const removeFromCart = (id: string) => setCart(prev => prev.filter(c => c.product.id !== id));
 
-  const placeOrder = () => {
+  const goToCheckout = () => {
     if (cart.length === 0) return;
-
-    // Check stock
-    for (const item of cart) {
-      const product = products.find(p => p.id === item.product.id);
-      if (!product || product.stock < item.qty) {
-        toast({ title: "Insufficient Stock", description: `${item.product.name} only has ${product?.stock ?? 0} units.`, variant: "destructive" });
-        return;
+    // Sync all cart items to global cart context
+    globalCart.clearCart();
+    cart.forEach(item => {
+      for (let i = 0; i < item.qty; i++) {
+        globalCart.addItem({
+          id: item.product.id,
+          name: item.product.name,
+          price: item.product.price,
+          image: item.product.image,
+          stock: item.product.stock,
+        });
       }
-    }
-
-    // Update inventory
-    setProducts(prev => prev.map(p => {
-      const cartItem = cart.find(c => c.product.id === p.id);
-      return cartItem ? { ...p, stock: p.stock - cartItem.qty } : p;
-    }));
-
-    // Create order
-    const order: Order = {
-      id: `ORD-${Date.now().toString(36).toUpperCase()}`,
-      items: cart,
-      total: cart.reduce((sum, c) => sum + c.product.price * c.qty, 0),
-      date: new Date().toLocaleDateString(),
-      status: "Confirmed",
-    };
-    setOrders(prev => [order, ...prev]);
-    setCart([]);
+    });
     setCartOpen(false);
-    toast({ title: "Order Confirmed! ✅", description: `Order ${order.id} placed. Inventory updated.` });
+    navigate("/checkout");
   };
 
   const cartTotal = cart.reduce((sum, c) => sum + c.product.price * c.qty, 0);
@@ -256,7 +249,7 @@ const Shop = () => {
                     <span className="text-muted-foreground">Total</span>
                     <span className="font-display text-2xl text-primary">₹{cartTotal}</span>
                   </div>
-                  <Button onClick={placeOrder} className="w-full font-display text-lg tracking-wide">PLACE ORDER</Button>
+                  <Button onClick={goToCheckout} className="w-full font-display text-lg tracking-wide">PROCEED TO CHECKOUT</Button>
                 </div>
               )}
             </motion.div>
