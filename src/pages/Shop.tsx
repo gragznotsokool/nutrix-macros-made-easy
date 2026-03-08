@@ -101,36 +101,23 @@ const Shop = () => {
 
   const removeFromCart = (id: string) => setCart(prev => prev.filter(c => c.product.id !== id));
 
-  const placeOrder = () => {
+  const goToCheckout = () => {
     if (cart.length === 0) return;
-
-    // Check stock
-    for (const item of cart) {
-      const product = products.find(p => p.id === item.product.id);
-      if (!product || product.stock < item.qty) {
-        toast({ title: "Insufficient Stock", description: `${item.product.name} only has ${product?.stock ?? 0} units.`, variant: "destructive" });
-        return;
+    // Sync all cart items to global cart context
+    globalCart.clearCart();
+    cart.forEach(item => {
+      for (let i = 0; i < item.qty; i++) {
+        globalCart.addItem({
+          id: item.product.id,
+          name: item.product.name,
+          price: item.product.price,
+          image: item.product.image,
+          stock: item.product.stock,
+        });
       }
-    }
-
-    // Update inventory
-    setProducts(prev => prev.map(p => {
-      const cartItem = cart.find(c => c.product.id === p.id);
-      return cartItem ? { ...p, stock: p.stock - cartItem.qty } : p;
-    }));
-
-    // Create order
-    const order: Order = {
-      id: `ORD-${Date.now().toString(36).toUpperCase()}`,
-      items: cart,
-      total: cart.reduce((sum, c) => sum + c.product.price * c.qty, 0),
-      date: new Date().toLocaleDateString(),
-      status: "Confirmed",
-    };
-    setOrders(prev => [order, ...prev]);
-    setCart([]);
+    });
     setCartOpen(false);
-    toast({ title: "Order Confirmed! ✅", description: `Order ${order.id} placed. Inventory updated.` });
+    navigate("/checkout");
   };
 
   const cartTotal = cart.reduce((sum, c) => sum + c.product.price * c.qty, 0);
