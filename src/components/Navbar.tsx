@@ -1,8 +1,14 @@
 import { useState } from "react";
 import { ShoppingCart, User, Search, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
 
-const navLinks = ["Products", "Categories", "Subscriptions", "About"];
+const navLinks = [
+  { label: "Products", href: "/#products" },
+  { label: "Calculator", href: "/calculator" },
+  { label: "Meal Tracker", href: "/meals" },
+  { label: "Shop", href: "/shop" },
+];
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
