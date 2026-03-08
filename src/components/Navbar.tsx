@@ -24,13 +24,13 @@ const Navbar = () => {
 
         <div className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
-            <a
-              key={link}
-              href={`#${link.toLowerCase()}`}
+            <Link
+              key={link.label}
+              to={link.href}
               className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
             >
-              {link}
-            </a>
+              {link.label}
+            </Link>
           ))}
         </div>
 
