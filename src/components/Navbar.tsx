@@ -1,8 +1,14 @@
 import { useState } from "react";
 import { ShoppingCart, User, Search, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
 
-const navLinks = ["Products", "Categories", "Subscriptions", "About"];
+const navLinks = [
+  { label: "Products", href: "/#products" },
+  { label: "Calculator", href: "/calculator" },
+  { label: "Meal Tracker", href: "/meals" },
+  { label: "Shop", href: "/shop" },
+];
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -18,13 +24,13 @@ const Navbar = () => {
 
         <div className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
-            <a
-              key={link}
-              href={`#${link.toLowerCase()}`}
+            <Link
+              key={link.label}
+              to={link.href}
               className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
             >
-              {link}
-            </a>
+              {link.label}
+            </Link>
           ))}
         </div>
 
@@ -60,14 +66,14 @@ const Navbar = () => {
           >
             <div className="flex flex-col gap-4 p-6">
               {navLinks.map((link) => (
-                <a
-                  key={link}
-                  href={`#${link.toLowerCase()}`}
+                <Link
+                  key={link.label}
+                  to={link.href}
                   className="text-lg font-medium text-muted-foreground hover:text-primary transition-colors"
                   onClick={() => setMobileOpen(false)}
                 >
-                  {link}
-                </a>
+                  {link.label}
+                </Link>
               ))}
             </div>
           </motion.div>
