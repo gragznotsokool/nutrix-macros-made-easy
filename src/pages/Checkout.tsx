@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -13,11 +13,17 @@ import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import {
-  CreditCard, Truck, CheckCircle2, ShieldCheck, ArrowLeft,
-  Package, MapPin, Lock, ChevronRight
+  Truck, CheckCircle2, ShieldCheck, ArrowLeft,
+  Package, MapPin, Lock, ChevronRight, IndianRupee, CreditCard
 } from "lucide-react";
+import {
+  loadRazorpayScript,
+  createRazorpayOrder,
+  openRazorpayCheckout,
+  RAZORPAY_KEY_ID,
+} from "@/lib/razorpay";
 
-type Step = "shipping" | "payment" | "review" | "confirmed";
+type Step = "shipping" | "review" | "confirmed";
 
 const ORDERS_KEY = "nutrix-orders";
 
@@ -37,23 +43,23 @@ const Checkout = () => {
     state: "",
     zip: "",
   });
-  const [payment, setPayment] = useState({
-    cardNumber: "",
-    cardName: "",
-    expiry: "",
-    cvv: "",
-  });
   const [orderId, setOrderId] = useState("");
+  const [paymentId, setPaymentId] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [razorpayLoaded, setRazorpayLoaded] = useState(false);
 
   const deliveryFee = total >= 1500 ? 0 : 99;
   const tax = Math.round(total * 0.18);
   const grandTotal = total + deliveryFee + tax;
 
+  // Load Razorpay SDK on mount
+  useEffect(() => {
+    loadRazorpayScript().then(setRazorpayLoaded);
+  }, []);
+
   const steps: { key: Step; label: string; icon: React.ReactNode }[] = [
     { key: "shipping", label: "Shipping", icon: <Truck className="w-4 h-4" /> },
-    { key: "payment", label: "Payment", icon: <CreditCard className="w-4 h-4" /> },
-    { key: "review", label: "Review", icon: <ShieldCheck className="w-4 h-4" /> },
+    { key: "review", label: "Review & Pay", icon: <ShieldCheck className="w-4 h-4" /> },
     { key: "confirmed", label: "Done", icon: <CheckCircle2 className="w-4 h-4" /> },
   ];
 
@@ -69,64 +75,79 @@ const Checkout = () => {
       toast({ title: "Invalid Email", description: "Please enter a valid email.", variant: "destructive" });
       return false;
     }
-    return true;
-  };
-
-  const validatePayment = () => {
-    const { cardNumber, cardName, expiry, cvv } = payment;
-    if (!cardNumber || !cardName || !expiry || !cvv) {
-      toast({ title: "Missing Fields", description: "Please fill all payment details.", variant: "destructive" });
-      return false;
-    }
-    const cleaned = cardNumber.replace(/\s/g, "");
-    if (cleaned.length < 13 || cleaned.length > 19 || !/^\d+$/.test(cleaned)) {
-      toast({ title: "Invalid Card", description: "Please enter a valid card number.", variant: "destructive" });
-      return false;
-    }
-    if (!/^\d{2}\/\d{2}$/.test(expiry)) {
-      toast({ title: "Invalid Expiry", description: "Use MM/YY format.", variant: "destructive" });
-      return false;
-    }
-    if (cvv.length < 3 || cvv.length > 4 || !/^\d+$/.test(cvv)) {
-      toast({ title: "Invalid CVV", description: "CVV must be 3 or 4 digits.", variant: "destructive" });
+    if (phone.length < 10) {
+      toast({ title: "Invalid Phone", description: "Please enter a valid 10-digit phone number.", variant: "destructive" });
       return false;
     }
     return true;
   };
 
-  const formatCardNumber = (val: string) => {
-    const digits = val.replace(/\D/g, "").slice(0, 16);
-    return digits.replace(/(\d{4})(?=\d)/g, "$1 ");
+  const handleRazorpayPayment = async () => {
+    if (!razorpayLoaded) {
+      toast({ title: "Payment Error", description: "Payment gateway is loading. Please try again.", variant: "destructive" });
+      return;
+    }
+
+    if (RAZORPAY_KEY_ID === "rzp_test_XXXXXXXXXXXXXXX") {
+      // Demo mode — simulate successful payment
+      toast({ title: "Demo Mode", description: "Using simulated payment. Replace RAZORPAY_KEY_ID in src/lib/razorpay.ts with your real key." });
+      simulatePaymentSuccess();
+      return;
+    }
+
+    setProcessing(true);
+
+    try {
+      const order = await createRazorpayOrder(grandTotal);
+
+      openRazorpayCheckout({
+        order,
+        customerName: shipping.fullName,
+        customerEmail: shipping.email,
+        customerPhone: shipping.phone,
+        onSuccess: (response) => {
+          setPaymentId(response.razorpay_payment_id);
+          completeOrder(response.razorpay_payment_id);
+        },
+        onFailure: () => {
+          setProcessing(false);
+          toast({ title: "Payment Cancelled", description: "You cancelled the payment. Try again when ready.", variant: "destructive" });
+        },
+      });
+    } catch {
+      setProcessing(false);
+      toast({ title: "Payment Error", description: "Could not initiate payment. Please try again.", variant: "destructive" });
+    }
   };
 
-  const formatExpiry = (val: string) => {
-    const digits = val.replace(/\D/g, "").slice(0, 4);
-    if (digits.length > 2) return digits.slice(0, 2) + "/" + digits.slice(2);
-    return digits;
-  };
-
-  const placeOrder = () => {
+  const simulatePaymentSuccess = () => {
     setProcessing(true);
     setTimeout(() => {
-      const id = `ORD-${Date.now().toString(36).toUpperCase()}`;
-      setOrderId(id);
+      const fakePaymentId = `pay_demo_${Date.now().toString(36)}`;
+      setPaymentId(fakePaymentId);
+      completeOrder(fakePaymentId);
+    }, 1500);
+  };
 
-      // Save order to localStorage
-      const existingOrders = JSON.parse(localStorage.getItem(ORDERS_KEY) || "[]");
-      const order = {
-        id,
-        items: items.map(i => ({ product: { id: i.id, name: i.name, price: i.price, image: i.image }, qty: i.qty })),
-        total: grandTotal,
-        date: new Date().toLocaleDateString(),
-        status: "Confirmed",
-        shipping,
-      };
-      localStorage.setItem(ORDERS_KEY, JSON.stringify([order, ...existingOrders]));
+  const completeOrder = (pId: string) => {
+    const id = `ORD-${Date.now().toString(36).toUpperCase()}`;
+    setOrderId(id);
 
-      clearCart();
-      setStep("confirmed");
-      setProcessing(false);
-    }, 2000);
+    const existingOrders = JSON.parse(localStorage.getItem(ORDERS_KEY) || "[]");
+    const order = {
+      id,
+      paymentId: pId,
+      items: items.map(i => ({ product: { id: i.id, name: i.name, price: i.price, image: i.image }, qty: i.qty })),
+      total: grandTotal,
+      date: new Date().toLocaleDateString(),
+      status: "Confirmed",
+      shipping,
+    };
+    localStorage.setItem(ORDERS_KEY, JSON.stringify([order, ...existingOrders]));
+
+    clearCart();
+    setStep("confirmed");
+    setProcessing(false);
   };
 
   if (items.length === 0 && step !== "confirmed") {
@@ -217,68 +238,7 @@ const Checkout = () => {
                           <Button variant="outline" onClick={() => navigate("/shop")} className="font-display">
                             <ArrowLeft className="w-4 h-4 mr-2" /> BACK
                           </Button>
-                          <Button onClick={() => validateShipping() && setStep("payment")} className="font-display tracking-wide">
-                            CONTINUE <ChevronRight className="w-4 h-4 ml-1" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                )}
-
-                {step === "payment" && (
-                  <motion.div key="payment" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
-                    <Card className="border-border bg-card">
-                      <CardContent className="p-6">
-                        <div className="flex items-center gap-3 mb-6">
-                          <CreditCard className="w-5 h-5 text-primary" />
-                          <h2 className="font-display text-2xl text-foreground">PAYMENT DETAILS</h2>
-                        </div>
-                        <div className="bg-secondary/50 rounded-lg p-4 mb-6 flex items-center gap-2 text-sm text-muted-foreground">
-                          <Lock className="w-4 h-4 text-primary" />
-                          <span>Your payment info is secure & encrypted (demo mode)</span>
-                        </div>
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <Label>Card Number</Label>
-                            <Input
-                              value={payment.cardNumber}
-                              onChange={e => setPayment(p => ({ ...p, cardNumber: formatCardNumber(e.target.value) }))}
-                              placeholder="4242 4242 4242 4242"
-                              maxLength={19}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Cardholder Name</Label>
-                            <Input value={payment.cardName} onChange={e => setPayment(p => ({ ...p, cardName: e.target.value }))} placeholder="JOHN DOE" />
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label>Expiry (MM/YY)</Label>
-                              <Input
-                                value={payment.expiry}
-                                onChange={e => setPayment(p => ({ ...p, expiry: formatExpiry(e.target.value) }))}
-                                placeholder="12/26"
-                                maxLength={5}
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label>CVV</Label>
-                              <Input
-                                type="password"
-                                value={payment.cvv}
-                                onChange={e => setPayment(p => ({ ...p, cvv: e.target.value.replace(/\D/g, "").slice(0, 4) }))}
-                                placeholder="•••"
-                                maxLength={4}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex justify-between mt-8">
-                          <Button variant="outline" onClick={() => setStep("shipping")} className="font-display">
-                            <ArrowLeft className="w-4 h-4 mr-2" /> BACK
-                          </Button>
-                          <Button onClick={() => validatePayment() && setStep("review")} className="font-display tracking-wide">
+                          <Button onClick={() => validateShipping() && setStep("review")} className="font-display tracking-wide">
                             REVIEW ORDER <ChevronRight className="w-4 h-4 ml-1" />
                           </Button>
                         </div>
@@ -292,7 +252,7 @@ const Checkout = () => {
                     <Card className="border-border bg-card">
                       <CardContent className="p-6 space-y-6">
                         <h2 className="font-display text-2xl text-foreground flex items-center gap-3">
-                          <ShieldCheck className="w-5 h-5 text-primary" /> REVIEW ORDER
+                          <ShieldCheck className="w-5 h-5 text-primary" /> REVIEW & PAY
                         </h2>
 
                         {/* Shipping summary */}
@@ -303,13 +263,22 @@ const Checkout = () => {
                           <p className="text-sm text-muted-foreground">{shipping.phone} • {shipping.email}</p>
                         </div>
 
-                        {/* Payment summary */}
-                        <div className="bg-secondary/50 rounded-lg p-4">
-                          <p className="text-xs text-muted-foreground mb-1 font-display tracking-wider">PAYMENT</p>
-                          <p className="text-foreground font-medium flex items-center gap-2">
-                            <CreditCard className="w-4 h-4" /> •••• •••• •••• {payment.cardNumber.replace(/\s/g, "").slice(-4)}
-                          </p>
-                          <p className="text-sm text-muted-foreground">{payment.cardName} • Exp {payment.expiry}</p>
+                        {/* Payment method info */}
+                        <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                              <CreditCard className="w-5 h-5 text-primary" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-foreground">Pay with Razorpay</p>
+                              <p className="text-xs text-muted-foreground">UPI, Cards, Net Banking, Wallets & more</p>
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-2 mt-3">
+                            {["UPI", "Cards", "Net Banking", "Wallets", "EMI"].map(method => (
+                              <Badge key={method} variant="secondary" className="text-[10px]">{method}</Badge>
+                            ))}
+                          </div>
                         </div>
 
                         {/* Items */}
@@ -330,18 +299,22 @@ const Checkout = () => {
                         </div>
 
                         <div className="flex justify-between mt-8">
-                          <Button variant="outline" onClick={() => setStep("payment")} className="font-display">
+                          <Button variant="outline" onClick={() => setStep("shipping")} className="font-display">
                             <ArrowLeft className="w-4 h-4 mr-2" /> BACK
                           </Button>
                           <Button
-                            onClick={placeOrder}
+                            onClick={handleRazorpayPayment}
                             disabled={processing}
-                            className="font-display tracking-wide min-w-[180px]"
+                            className="font-display tracking-wide min-w-[200px] gap-2"
                           >
                             {processing ? (
                               <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }} className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full" />
                             ) : (
-                              <>PAY ₹{grandTotal} <Lock className="w-4 h-4 ml-1" /></>
+                              <>
+                                <IndianRupee className="w-4 h-4" />
+                                PAY ₹{grandTotal} WITH RAZORPAY
+                                <Lock className="w-4 h-4" />
+                              </>
                             )}
                           </Button>
                         </div>
@@ -357,8 +330,15 @@ const Checkout = () => {
                         <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }}>
                           <CheckCircle2 className="w-20 h-20 text-primary mx-auto" />
                         </motion.div>
-                        <h2 className="font-display text-4xl text-foreground">ORDER CONFIRMED!</h2>
-                        <p className="text-muted-foreground">Your order <span className="text-primary font-bold">{orderId}</span> has been placed successfully.</p>
+                        <h2 className="font-display text-4xl text-foreground">PAYMENT SUCCESSFUL!</h2>
+                        <p className="text-muted-foreground">
+                          Order <span className="text-primary font-bold">{orderId}</span> confirmed.
+                        </p>
+                        {paymentId && (
+                          <p className="text-xs text-muted-foreground">
+                            Payment ID: <span className="font-mono text-foreground">{paymentId}</span>
+                          </p>
+                        )}
                         <div className="bg-secondary/50 rounded-lg p-4 text-left max-w-sm mx-auto text-sm space-y-1">
                           <p className="text-muted-foreground">Shipping to: <span className="text-foreground">{shipping.fullName}</span></p>
                           <p className="text-muted-foreground">Address: <span className="text-foreground">{shipping.city}, {shipping.state}</span></p>
@@ -420,6 +400,14 @@ const Checkout = () => {
                         Add ₹{1500 - total} more for free delivery!
                       </p>
                     )}
+
+                    {/* Razorpay trust badge */}
+                    <div className="pt-2 border-t border-border">
+                      <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                        <Lock className="w-3 h-3" />
+                        <span>Secured by Razorpay</span>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
