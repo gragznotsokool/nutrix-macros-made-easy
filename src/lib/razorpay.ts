@@ -1,6 +1,6 @@
 // Razorpay configuration
 // Replace these with your real Razorpay keys when you pull the project
-export const RAZORPAY_KEY_ID = "rzp_test_XXXXXXXXXXXXXXX"; // Your Razorpay Key ID (publishable)
+export const RAZORPAY_KEY_ID = "rzp_test_9XbJPu0vOzevBn"; // Your Razorpay Key ID (publishable)
 
 export interface RazorpayOrder {
   id: string;
