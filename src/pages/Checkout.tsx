@@ -88,7 +88,7 @@ const Checkout = () => {
       return;
     }
 
-    if (RAZORPAY_KEY_ID === "rzp_test_XXXXXXXXXXXXXXX") {
+    if (RAZORPAY_KEY_ID.includes("XXXXXXXX")) {
       // Demo mode — simulate successful payment
       toast({ title: "Demo Mode", description: "Using simulated payment. Replace RAZORPAY_KEY_ID in src/lib/razorpay.ts with your real key." });
       simulatePaymentSuccess();
