@@ -18,9 +18,7 @@ import {
 } from "lucide-react";
 import {
   loadRazorpayScript,
-  createRazorpayOrder,
   openRazorpayCheckout,
-  RAZORPAY_KEY_ID,
 } from "@/lib/razorpay";
 
 type Step = "shipping" | "review" | "confirmed";
