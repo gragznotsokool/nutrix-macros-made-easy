@@ -26,7 +26,44 @@ const CART_KEY = "nutrix-cart";
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>(() => {
     const saved = localStorage.getItem(CART_KEY);
-    return saved ? JSON.parse(saved) : [];
+    if (!saved) return [];
+
+    try {
+      const parsed = JSON.parse(saved) as Array<Partial<CartItem>>;
+      if (!Array.isArray(parsed)) return [];
+
+      return parsed
+        .map((item) => {
+          const id = typeof item.id === "string" ? item.id : "";
+          const name = typeof item.name === "string" ? item.name : "";
+          const image = typeof item.image === "string" ? item.image : "";
+          const price = Number(item.price);
+          const stock = Number(item.stock);
+          const qty = Number(item.qty);
+
+          if (!id || !name || !image || !Number.isFinite(price) || !Number.isFinite(stock)) {
+            return null;
+          }
+
+          const normalizedStock = Math.max(1, Math.floor(stock));
+          const normalizedQty = Math.min(
+            normalizedStock,
+            Math.max(1, Number.isFinite(qty) ? Math.floor(qty) : 1),
+          );
+
+          return {
+            id,
+            name,
+            image,
+            price,
+            stock: normalizedStock,
+            qty: normalizedQty,
+          } satisfies CartItem;
+        })
+        .filter((item): item is CartItem => item !== null);
+    } catch {
+      return [];
+    }
   });
 
   useEffect(() => {
@@ -57,8 +94,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const clearCart = () => setItems([]);
 
-  const count = items.reduce((sum, c) => sum + c.qty, 0);
-  const total = items.reduce((sum, c) => sum + c.price * c.qty, 0);
+  const count = items.reduce((sum, c) => sum + Number(c.qty || 0), 0);
+  const total = items.reduce((sum, c) => sum + Number(c.price || 0) * Number(c.qty || 0), 0);
 
   return (
     <CartContext.Provider value={{ items, addItem, removeItem, updateQty, clearCart, count, total }}>
