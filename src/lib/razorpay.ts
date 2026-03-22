@@ -71,6 +71,42 @@ export const openRazorpayCheckout = ({
     return;
   }
 
+  let settled = false;
+  const originalAlert = window.alert.bind(window);
+
+  const restoreAlert = () => {
+    window.alert = originalAlert;
+  };
+
+  const safeSuccess = (response: RazorpayResponse) => {
+    if (settled) return;
+    settled = true;
+    restoreAlert();
+    onSuccess(response);
+  };
+
+  const safeFailure = (error: RazorpayFailure | Error) => {
+    if (settled) return;
+    settled = true;
+    restoreAlert();
+    onFailure(error);
+  };
+
+  window.alert = (message?: string) => {
+    const text = String(message ?? "");
+    const normalized = text.toLowerCase();
+
+    if (normalized.includes("payment failed") || normalized.includes("something went wrong")) {
+      safeFailure({
+        reason: "gateway_failure",
+        description: text,
+      });
+      return;
+    }
+
+    originalAlert(text);
+  };
+
   const options = {
     key: RAZORPAY_KEY_ID,
     amount: amountInPaise,
@@ -85,12 +121,10 @@ export const openRazorpayCheckout = ({
     theme: {
       color: "#22c55e",
     },
-    handler: (response: RazorpayResponse) => {
-      onSuccess(response);
-    },
+    handler: safeSuccess,
     modal: {
       ondismiss: () => {
-        onFailure({
+        safeFailure({
           reason: "cancelled_by_user",
           description: "Payment popup was closed before completion.",
         });
@@ -103,7 +137,7 @@ export const openRazorpayCheckout = ({
 
   const rzp = new window.Razorpay(options);
   rzp.on("payment.failed", (event?: { error?: RazorpayFailure }) => {
-    onFailure(
+    safeFailure(
       event?.error ?? {
         reason: "gateway_failure",
         description: "Payment failed at gateway. Please retry with another method.",
