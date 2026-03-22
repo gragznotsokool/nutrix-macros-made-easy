@@ -17,6 +17,7 @@ import {
   Package, MapPin, Lock, ChevronRight, IndianRupee, CreditCard
 } from "lucide-react";
 import {
+  RAZORPAY_KEY_ID,
   loadRazorpayScript,
   openRazorpayCheckout,
   type RazorpayFailure,
@@ -26,7 +27,10 @@ type Step = "shipping" | "review" | "confirmed";
 
 const ORDERS_KEY = "nutrix-orders";
 
-const getPaymentErrorContent = (error: RazorpayFailure | Error | unknown) => {
+const getPaymentErrorContent = (
+  error: RazorpayFailure | Error | unknown,
+  isTestMode: boolean,
+) => {
   if (error instanceof Error) {
     return {
       title: "Payment Error",
@@ -44,9 +48,14 @@ const getPaymentErrorContent = (error: RazorpayFailure | Error | unknown) => {
     (failure.reason || "").toLowerCase().includes("cancel") ||
     message.toLowerCase().includes("closed");
 
+  const description =
+    isTestMode && !isCancelled
+      ? `${message} (Test mode: use Razorpay test payment details.)`
+      : message;
+
   return {
     title: isCancelled ? "Payment Cancelled" : "Payment Failed",
-    description: message,
+    description,
   };
 };
 
@@ -70,6 +79,8 @@ const Checkout = () => {
   const [paymentId, setPaymentId] = useState("");
   const [processing, setProcessing] = useState(false);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
+
+  const isTestMode = RAZORPAY_KEY_ID.startsWith("rzp_test_");
 
   const subtotal = Number(total) || 0;
   const deliveryFee = subtotal >= 1500 ? 0 : 99;
@@ -131,7 +142,7 @@ const Checkout = () => {
         },
         onFailure: (error) => {
           setProcessing(false);
-          const { title, description } = getPaymentErrorContent(error);
+          const { title, description } = getPaymentErrorContent(error, isTestMode);
           toast({ title, description, variant: "destructive" });
         },
       });
@@ -291,6 +302,11 @@ const Checkout = () => {
                               <Badge key={method} variant="secondary" className="text-[10px]">{method}</Badge>
                             ))}
                           </div>
+                          {isTestMode && (
+                            <p className="mt-3 text-xs text-muted-foreground">
+                              Razorpay test mode active. Use Razorpay test UPI/card details for successful payment.
+                            </p>
+                          )}
                         </div>
 
                         {/* Items */}
