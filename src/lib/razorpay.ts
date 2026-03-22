@@ -8,6 +8,15 @@ export interface RazorpayResponse {
   razorpay_signature?: string;
 }
 
+export interface RazorpayFailure {
+  code?: string;
+  description?: string;
+  reason?: string;
+  source?: string;
+  step?: string;
+  metadata?: Record<string, unknown>;
+}
+
 // Load Razorpay SDK script dynamically
 export const loadRazorpayScript = (): Promise<boolean> => {
   return new Promise((resolve) => {
@@ -28,7 +37,7 @@ declare global {
   interface Window {
     Razorpay: new (options: Record<string, unknown>) => {
       open: () => void;
-      on: (event: string, handler: () => void) => void;
+      on: (event: string, handler: (payload?: unknown) => void) => void;
     };
   }
 }
@@ -39,7 +48,7 @@ interface OpenRazorpayOptions {
   customerEmail: string;
   customerPhone: string;
   onSuccess: (response: RazorpayResponse) => void;
-  onFailure: (error: unknown) => void;
+  onFailure: (error: RazorpayFailure | Error) => void;
 }
 
 export const openRazorpayCheckout = ({
@@ -50,9 +59,21 @@ export const openRazorpayCheckout = ({
   onSuccess,
   onFailure,
 }: OpenRazorpayOptions) => {
+  const amountInPaise = Math.round(amount * 100);
+
+  if (!Number.isFinite(amountInPaise) || amountInPaise <= 0) {
+    onFailure(new Error("Invalid checkout amount"));
+    return;
+  }
+
+  if (!window.Razorpay) {
+    onFailure(new Error("Razorpay SDK not available"));
+    return;
+  }
+
   const options = {
     key: RAZORPAY_KEY_ID,
-    amount: amount * 100, // Convert INR to paise
+    amount: amountInPaise,
     currency: "INR",
     name: "NutriX",
     description: "Premium Supplements Order",
@@ -69,11 +90,25 @@ export const openRazorpayCheckout = ({
     },
     modal: {
       ondismiss: () => {
-        onFailure(new Error("Payment cancelled by user"));
+        onFailure({
+          reason: "cancelled_by_user",
+          description: "Payment popup was closed before completion.",
+        });
       },
+    },
+    retry: {
+      enabled: true,
     },
   };
 
   const rzp = new window.Razorpay(options);
+  rzp.on("payment.failed", (event?: { error?: RazorpayFailure }) => {
+    onFailure(
+      event?.error ?? {
+        reason: "gateway_failure",
+        description: "Payment failed at gateway. Please retry with another method.",
+      },
+    );
+  });
   rzp.open();
 };

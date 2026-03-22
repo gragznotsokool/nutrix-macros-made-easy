@@ -19,11 +19,36 @@ import {
 import {
   loadRazorpayScript,
   openRazorpayCheckout,
+  type RazorpayFailure,
 } from "@/lib/razorpay";
 
 type Step = "shipping" | "review" | "confirmed";
 
 const ORDERS_KEY = "nutrix-orders";
+
+const getPaymentErrorContent = (error: RazorpayFailure | Error | unknown) => {
+  if (error instanceof Error) {
+    return {
+      title: "Payment Error",
+      description: error.message || "Could not process payment.",
+    };
+  }
+
+  const failure = (error ?? {}) as RazorpayFailure;
+  const message =
+    failure.description ||
+    failure.reason ||
+    "Payment could not be completed. Please retry.";
+
+  const isCancelled =
+    (failure.reason || "").toLowerCase().includes("cancel") ||
+    message.toLowerCase().includes("closed");
+
+  return {
+    title: isCancelled ? "Payment Cancelled" : "Payment Failed",
+    description: message,
+  };
+};
 
 const Checkout = () => {
   const { items, total, clearCart, count } = useCart();
@@ -46,9 +71,10 @@ const Checkout = () => {
   const [processing, setProcessing] = useState(false);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
 
-  const deliveryFee = total >= 1500 ? 0 : 99;
-  const tax = Math.round(total * 0.18);
-  const grandTotal = total + deliveryFee + tax;
+  const subtotal = Number(total) || 0;
+  const deliveryFee = subtotal >= 1500 ? 0 : 99;
+  const tax = Math.round(subtotal * 0.18);
+  const grandTotal = subtotal + deliveryFee + tax;
 
   // Load Razorpay SDK on mount
   useEffect(() => {
@@ -86,6 +112,11 @@ const Checkout = () => {
       return;
     }
 
+    if (grandTotal <= 0) {
+      toast({ title: "Invalid Amount", description: "Cart total must be greater than ₹0.", variant: "destructive" });
+      return;
+    }
+
     setProcessing(true);
 
     try {
@@ -98,9 +129,10 @@ const Checkout = () => {
           setPaymentId(response.razorpay_payment_id);
           completeOrder(response.razorpay_payment_id);
         },
-        onFailure: () => {
+        onFailure: (error) => {
           setProcessing(false);
-          toast({ title: "Payment Cancelled", description: "You cancelled the payment. Try again when ready.", variant: "destructive" });
+          const { title, description } = getPaymentErrorContent(error);
+          toast({ title, description, variant: "destructive" });
         },
       });
     } catch {
@@ -360,7 +392,7 @@ const Checkout = () => {
                     <Separator />
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between text-muted-foreground">
-                        <span>Subtotal</span><span>₹{total}</span>
+                        <span>Subtotal</span><span>₹{subtotal}</span>
                       </div>
                       <div className="flex justify-between text-muted-foreground">
                         <span>Delivery</span>
@@ -375,9 +407,9 @@ const Checkout = () => {
                       <span className="text-foreground font-medium">Total</span>
                       <span className="font-display text-2xl text-primary">₹{grandTotal}</span>
                     </div>
-                    {total < 1500 && (
+                    {subtotal < 1500 && (
                       <p className="text-xs text-muted-foreground text-center">
-                        Add ₹{1500 - total} more for free delivery!
+                        Add ₹{1500 - subtotal} more for free delivery!
                       </p>
                     )}
 
