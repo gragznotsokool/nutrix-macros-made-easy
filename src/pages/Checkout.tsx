@@ -86,20 +86,11 @@ const Checkout = () => {
       return;
     }
 
-    if (RAZORPAY_KEY_ID.includes("XXXXXXXX")) {
-      // Demo mode — simulate successful payment
-      toast({ title: "Demo Mode", description: "Using simulated payment. Replace RAZORPAY_KEY_ID in src/lib/razorpay.ts with your real key." });
-      simulatePaymentSuccess();
-      return;
-    }
-
     setProcessing(true);
 
     try {
-      const order = await createRazorpayOrder(grandTotal);
-
       openRazorpayCheckout({
-        order,
+        amount: grandTotal,
         customerName: shipping.fullName,
         customerEmail: shipping.email,
         customerPhone: shipping.phone,
@@ -116,15 +107,6 @@ const Checkout = () => {
       setProcessing(false);
       toast({ title: "Payment Error", description: "Could not initiate payment. Please try again.", variant: "destructive" });
     }
-  };
-
-  const simulatePaymentSuccess = () => {
-    setProcessing(true);
-    setTimeout(() => {
-      const fakePaymentId = `pay_demo_${Date.now().toString(36)}`;
-      setPaymentId(fakePaymentId);
-      completeOrder(fakePaymentId);
-    }, 1500);
   };
 
   const completeOrder = (pId: string) => {
