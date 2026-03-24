@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calculator, Target, Flame, Dumbbell } from "lucide-react";
+import { Calculator, Target, Flame, Dumbbell, ShoppingBag, ArrowRight } from "lucide-react";
+import { goalRecommendations } from "@/data/mockData";
 
 type Goal = "lose" | "maintain" | "gain";
 
