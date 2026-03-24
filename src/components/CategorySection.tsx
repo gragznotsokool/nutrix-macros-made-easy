@@ -1,14 +1,21 @@
 import { motion } from "framer-motion";
 import { Dumbbell, FlaskConical, Pill, HeartPulse } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const categories = [
-  { icon: Dumbbell, name: "Whey Protein", count: 12, desc: "Build lean muscle" },
-  { icon: FlaskConical, name: "Pre-Workout", count: 8, desc: "Maximize performance" },
-  { icon: Pill, name: "Vitamins", count: 15, desc: "Complete nutrition" },
-  { icon: HeartPulse, name: "Recovery", count: 10, desc: "Recover faster" },
+  { icon: Dumbbell, name: "Whey Protein", count: 8, desc: "Build lean muscle" },
+  { icon: FlaskConical, name: "Pre-Workout", count: 3, desc: "Maximize performance" },
+  { icon: Pill, name: "Vitamins", count: 1, desc: "Complete nutrition" },
+  { icon: HeartPulse, name: "Recovery", count: 8, desc: "Recover faster" },
 ];
 
 const CategorySection = () => {
+  const navigate = useNavigate();
+
+  const handleCategoryClick = (categoryName: string) => {
+    navigate(`/shop?category=${encodeURIComponent(categoryName)}`);
+  };
+
   return (
     <section id="categories" className="py-20 bg-section-gradient">
       <div className="container mx-auto px-4">
@@ -35,6 +42,7 @@ const CategorySection = () => {
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
               whileHover={{ y: -8 }}
+              onClick={() => handleCategoryClick(cat.name)}
               className="group relative bg-card rounded-xl p-8 border border-border hover:border-primary/50 transition-all cursor-pointer neon-border"
             >
               <div className="w-14 h-14 rounded-lg bg-primary/10 flex items-center justify-center mb-5 group-hover:bg-primary/20 transition-colors">
