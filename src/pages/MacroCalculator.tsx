@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calculator, Target, Flame, Dumbbell } from "lucide-react";
+import { Calculator, Target, Flame, Dumbbell, ShoppingBag, ArrowRight } from "lucide-react";
+import { goalRecommendations } from "@/data/mockData";
 
 type Goal = "lose" | "maintain" | "gain";
 
@@ -170,6 +172,29 @@ const MacroCalculator = () => {
                           </div>
                         </div>
                       ))}
+                    </CardContent>
+                  </Card>
+
+                  {/* Recommended Products */}
+                  <Card className="border-primary/30 bg-card neon-border">
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-2 mb-3">
+                        <ShoppingBag className="w-4 h-4 text-primary" />
+                        <p className="font-display text-lg text-foreground">Recommended For You</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-3">{goalRecommendations[goal].reason}</p>
+                      <div className="space-y-2">
+                        {goalRecommendations[goal].products.map(p => (
+                          <div key={p} className="flex items-center justify-between p-2 rounded-lg bg-secondary">
+                            <span className="text-sm text-foreground">{p}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <Link to="/shop">
+                        <Button variant="outline" className="w-full mt-3 font-display tracking-wide border-primary/30 text-primary hover:bg-primary/10">
+                          SHOP NOW <ArrowRight className="w-4 h-4 ml-1" />
+                        </Button>
+                      </Link>
                     </CardContent>
                   </Card>
                 </div>
