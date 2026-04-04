@@ -31,6 +31,7 @@ const Shop = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const globalCart = useCart();
+  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const initialCategory = (searchParams.get("category") as UICategory) || "All";
