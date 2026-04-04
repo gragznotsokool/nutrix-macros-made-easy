@@ -73,6 +73,11 @@ const Shop = () => {
       : allProducts.filter((p) => categoryToUI[p.category] === activeCategory);
 
   const addToCart = (product: Product) => {
+    if (!user) {
+      toast({ title: "Sign in Required", description: "Please sign in to add items to cart.", variant: "destructive" });
+      navigate("/login");
+      return;
+    }
     if (product.stock <= 0) {
       toast({ title: "Out of Stock", description: `${product.name} is currently unavailable.`, variant: "destructive" });
       return;
