@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Package, CheckCircle2, Minus, Plus, X, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { allProducts, UI_CATEGORIES, categoryToUI, type Product, type UICategory } from "@/data/products";
 
 interface CartItem {

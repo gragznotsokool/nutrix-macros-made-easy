@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { CartProvider } from "./contexts/CartContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import MacroCalculator from "./pages/MacroCalculator";
 import MealTracker from "./pages/MealTracker";
@@ -15,7 +16,6 @@ import Signup from "./pages/Signup";
 import Checkout from "./pages/Checkout";
 import NotFound from "./pages/NotFound";
 
-// Lazy-loaded admin dashboards
 const ErpDashboard = lazy(() => import("./pages/ErpDashboard"));
 const OrderManagement = lazy(() => import("./pages/OrderManagement"));
 const CrmDashboard = lazy(() => import("./pages/CrmDashboard"));
@@ -47,10 +47,26 @@ const App = () => (
                 <Route path="/shop" element={<Shop />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/erp-dashboard" element={<ErpDashboard />} />
-                <Route path="/order-management" element={<OrderManagement />} />
-                <Route path="/crm-dashboard" element={<CrmDashboard />} />
+                <Route path="/checkout" element={
+                  <ProtectedRoute>
+                    <Checkout />
+                  </ProtectedRoute>
+                } />
+                <Route path="/erp-dashboard" element={
+                  <ProtectedRoute requireAdmin>
+                    <ErpDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/order-management" element={
+                  <ProtectedRoute requireAdmin>
+                    <OrderManagement />
+                  </ProtectedRoute>
+                } />
+                <Route path="/crm-dashboard" element={
+                  <ProtectedRoute requireAdmin>
+                    <CrmDashboard />
+                  </ProtectedRoute>
+                } />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
