@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Shield, FlaskConical, Truck, RefreshCcw } from "lucide-react";
+import { Shield, FlaskConical, Truck, RefreshCcw, Calculator, Utensils, Target, BarChart3 } from "lucide-react";
 
 const features = [
   {
@@ -21,6 +21,26 @@ const features = [
     icon: RefreshCcw,
     title: "Subscribe & Save",
     desc: "Get up to 20% off with monthly subscriptions. Cancel anytime, no commitment.",
+  },
+  {
+    icon: Calculator,
+    title: "Macro Tracking",
+    desc: "Calculate your daily protein, carbs, and fats with our precision macro calculator.",
+  },
+  {
+    icon: Utensils,
+    title: "Meal Planning",
+    desc: "Log meals, track calories, and visualize your daily nutritional intake effortlessly.",
+  },
+  {
+    icon: Target,
+    title: "Fitness Goals",
+    desc: "Set goals for weight loss, muscle gain, or maintenance — get personalized plans.",
+  },
+  {
+    icon: BarChart3,
+    title: "Data Visualization",
+    desc: "Beautiful charts and breakdowns to understand your nutrition at a glance.",
   },
 ];
 
@@ -49,7 +69,7 @@ const FeaturesSection = () => {
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
+              transition={{ delay: i * 0.08 }}
               className="text-center"
             >
               <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5">
