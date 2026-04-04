@@ -60,6 +60,10 @@ const Login = () => {
               </div>
               <Button type="submit" className="w-full font-display text-lg tracking-wide">SIGN IN</Button>
             </form>
+            <div className="bg-secondary/50 rounded-lg p-3 mt-4">
+              <p className="text-xs text-muted-foreground text-center mb-1">Admin Login</p>
+              <p className="text-xs text-center text-foreground font-mono">admin@nutrix.com / admin123</p>
+            </div>
             <p className="text-center text-sm text-muted-foreground mt-4">
               Don't have an account?{" "}
               <Link to="/signup" className="text-primary hover:underline">Sign up</Link>
