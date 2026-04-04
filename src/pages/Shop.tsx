@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Package, CheckCircle2, Minus, Plus, X, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { allProducts, UI_CATEGORIES, categoryToUI, type Product, type UICategory } from "@/data/products";
 
 interface CartItem {
@@ -30,6 +31,7 @@ const Shop = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const globalCart = useCart();
+  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const initialCategory = (searchParams.get("category") as UICategory) || "All";
@@ -73,6 +75,11 @@ const Shop = () => {
       : allProducts.filter((p) => categoryToUI[p.category] === activeCategory);
 
   const addToCart = (product: Product) => {
+    if (!user) {
+      toast({ title: "Sign in Required", description: "Please sign in to add items to cart.", variant: "destructive" });
+      navigate("/login");
+      return;
+    }
     if (product.stock <= 0) {
       toast({ title: "Out of Stock", description: `${product.name} is currently unavailable.`, variant: "destructive" });
       return;

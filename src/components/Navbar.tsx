@@ -1,28 +1,31 @@
 import { useState, useRef, useEffect } from "react";
-import { ShoppingCart, User, Menu, X, LogOut, LogIn, UserPlus } from "lucide-react";
+import { ShoppingCart, User, Menu, X, LogOut, LogIn, UserPlus, Shield } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 
-const navLinks = [
-  { label: "Products", href: "/#products" },
-  { label: "Calculator", href: "/calculator" },
-  { label: "Shop", href: "/shop" },
-  { label: "ERP Dashboard", href: "/erp-dashboard" },
-  { label: "Orders", href: "/order-management" },
-  { label: "CRM Dashboard", href: "/crm-dashboard" },
-];
-
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const { count } = useCart();
   const navigate = useNavigate();
   const profileRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown on outside click
+  const navLinks = [
+    { label: "Products", href: "/#products" },
+    { label: "Calculator", href: "/calculator" },
+    { label: "Shop", href: "/shop" },
+    ...(isAdmin
+      ? [
+          { label: "ERP Dashboard", href: "/erp-dashboard" },
+          { label: "Orders", href: "/order-management" },
+          { label: "CRM Dashboard", href: "/crm-dashboard" },
+        ]
+      : []),
+  ];
+
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
@@ -55,7 +58,6 @@ const Navbar = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Cart Icon */}
           <Link
             to="/shop"
             className="relative text-muted-foreground hover:text-foreground transition-colors p-2"
@@ -68,7 +70,6 @@ const Navbar = () => {
             )}
           </Link>
 
-          {/* Profile Icon & Dropdown */}
           <div className="relative" ref={profileRef}>
             <button
               onClick={() => setProfileOpen(!profileOpen)}
@@ -89,15 +90,19 @@ const Navbar = () => {
                   {user ? (
                     <>
                       <div className="px-4 py-3 border-b border-border">
-                        <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
+                          {isAdmin && (
+                            <span className="flex items-center gap-1 text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full">
+                              <Shield className="w-3 h-3" /> Admin
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                       </div>
                       <div className="p-1">
                         <button
-                          onClick={() => {
-                            logout();
-                            setProfileOpen(false);
-                          }}
+                          onClick={() => { logout(); setProfileOpen(false); }}
                           className="flex items-center gap-2 w-full px-3 py-2 text-sm text-muted-foreground hover:text-destructive hover:bg-secondary rounded-md transition-colors"
                         >
                           <LogOut className="w-4 h-4" /> Sign Out
@@ -125,7 +130,6 @@ const Navbar = () => {
             </AnimatePresence>
           </div>
 
-          {/* Mobile Menu Toggle */}
           <button
             className="md:hidden text-muted-foreground p-2"
             onClick={() => setMobileOpen(!mobileOpen)}
