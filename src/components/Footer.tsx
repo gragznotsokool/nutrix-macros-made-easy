@@ -1,4 +1,5 @@
 import { Instagram, Twitter, Youtube } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
@@ -36,7 +37,13 @@ const Footer = () => {
             },
             {
               title: "Support",
-              links: ["FAQs", "Shipping", "Returns", "Track Order", "Privacy Policy"],
+              links: [
+                { label: "FAQs", href: "#" },
+                { label: "Shipping", href: "#" },
+                { label: "Returns", href: "#" },
+                { label: "Track Order", href: "#" },
+                { label: "Terms & Privacy", href: "/terms-privacy" },
+              ],
             },
           ].map((col) => (
             <div key={col.title}>
