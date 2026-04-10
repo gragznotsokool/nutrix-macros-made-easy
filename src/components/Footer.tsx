@@ -1,4 +1,5 @@
 import { Instagram, Twitter, Youtube } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
@@ -28,28 +29,55 @@ const Footer = () => {
           {[
             {
               title: "Products",
-              links: ["Whey Protein", "Pre-Workout", "BCAA", "Creatine", "Vitamins"],
+              links: [
+                { label: "Whey Protein", href: "#" },
+                { label: "Pre-Workout", href: "#" },
+                { label: "BCAA", href: "#" },
+                { label: "Creatine", href: "#" },
+                { label: "Vitamins", href: "#" },
+              ],
             },
             {
               title: "Company",
-              links: ["About Us", "Lab Reports", "Blog", "Careers", "Contact"],
+              links: [
+                { label: "About Us", href: "#" },
+                { label: "Lab Reports", href: "#" },
+                { label: "Blog", href: "#" },
+                { label: "Careers", href: "#" },
+                { label: "Contact", href: "#" },
+              ],
             },
             {
               title: "Support",
-              links: ["FAQs", "Shipping", "Returns", "Track Order", "Privacy Policy"],
+              links: [
+                { label: "FAQs", href: "#" },
+                { label: "Shipping", href: "#" },
+                { label: "Returns", href: "#" },
+                { label: "Track Order", href: "#" },
+                { label: "Terms & Privacy", href: "/terms-privacy" },
+              ],
             },
           ].map((col) => (
             <div key={col.title}>
               <h4 className="font-display text-xl text-foreground mb-4">{col.title}</h4>
               <ul className="space-y-2.5">
                 {col.links.map((link) => (
-                  <li key={link}>
-                    <a
-                      href="#"
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                    >
-                      {link}
-                    </a>
+                  <li key={link.label}>
+                    {link.href.startsWith("/") ? (
+                      <Link
+                        to={link.href}
+                        className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                      >
+                        {link.label}
+                      </Link>
+                    ) : (
+                      <a
+                        href={link.href}
+                        className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                      >
+                        {link.label}
+                      </a>
+                    )}
                   </li>
                 ))}
               </ul>

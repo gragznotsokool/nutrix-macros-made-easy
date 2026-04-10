@@ -19,6 +19,11 @@ import NotFound from "./pages/NotFound";
 const ErpDashboard = lazy(() => import("./pages/ErpDashboard"));
 const OrderManagement = lazy(() => import("./pages/OrderManagement"));
 const CrmDashboard = lazy(() => import("./pages/CrmDashboard"));
+const ScmDashboard = lazy(() => import("./pages/ScmDashboard"));
+const MarketingDashboard = lazy(() => import("./pages/MarketingDashboard"));
+const RevenueDashboard = lazy(() => import("./pages/RevenueDashboard"));
+const CrmFeedbackDashboard = lazy(() => import("./pages/CrmFeedbackDashboard"));
+const TermsPrivacy = lazy(() => import("./pages/TermsPrivacy"));
 
 const queryClient = new QueryClient();
 
@@ -67,6 +72,27 @@ const App = () => (
                     <CrmDashboard />
                   </ProtectedRoute>
                 } />
+                <Route path="/scm-dashboard" element={
+                  <ProtectedRoute requireAdmin>
+                    <ScmDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/marketing-dashboard" element={
+                  <ProtectedRoute requireAdmin>
+                    <MarketingDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/revenue-dashboard" element={
+                  <ProtectedRoute requireAdmin>
+                    <RevenueDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/crm-feedback" element={
+                  <ProtectedRoute requireAdmin>
+                    <CrmFeedbackDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/terms-privacy" element={<TermsPrivacy />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
