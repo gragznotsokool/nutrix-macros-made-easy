@@ -19,9 +19,13 @@ const Navbar = () => {
     { label: "Shop", href: "/shop" },
     ...(isAdmin
       ? [
-          { label: "ERP Dashboard", href: "/erp-dashboard" },
+          { label: "ERP", href: "/erp-dashboard" },
           { label: "Orders", href: "/order-management" },
-          { label: "CRM Dashboard", href: "/crm-dashboard" },
+          { label: "CRM", href: "/crm-dashboard" },
+          { label: "SCM", href: "/scm-dashboard" },
+          { label: "Marketing", href: "/marketing-dashboard" },
+          { label: "Revenue", href: "/revenue-dashboard" },
+          { label: "Feedback", href: "/crm-feedback" },
         ]
       : []),
   ];
